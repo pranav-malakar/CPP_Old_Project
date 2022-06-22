@@ -1,0 +1,511 @@
+//Pranav M.  17  ?B
+
+/*
+
+Project- Retro Game- Chungus Breakout v 2.0
+
+(a) Brick shooting game
+(b) Includes welcome screen, input screen, loading screen and the main game
+(c) Stores user's name, age, score into a data file
+(d) Scoreboard refreshes after every game
+
+*/
+
+#include<fstream.h>
+#include<conio.h>
+#include<graphics.h>
+#include<stdlib.h>
+#include<dos.h>
+#include<stdio.h>
+#include<string.h>
+
+int old_r=15;
+int new_r=15;
+int rec_y[20]={15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15};
+int rec_x[20];
+int color[20];
+int no_of_players=0;
+char *score = "000000";
+long int sc;
+long int speed=0;
+
+//a class which has name and age as private members and score as public member
+class player
+{
+char pname[11];
+char page[4];
+public:
+long int score;
+char* retpname()
+	{
+	return pname;
+	}
+char* retpage()
+	{
+	return page;
+	}
+void copy(player &p)
+	{
+	strcpy(pname,p.retpname());
+	strcpy(page,p.retpage());
+	score=p.score;
+	}
+};
+player p;
+player pp[20];
+
+//function for converting int to char
+void inttostr(long int x)
+{
+int i = 5;
+score[i+1] = '\0';
+while(x != 0)
+	{
+	int rem = x%10;
+	score[i] = rem+48;
+	x=x/10;
+	i--;
+	}
+}
+
+//function to sort the players in descending order according to their scores
+void sort()
+{
+int i=0,j=0,k=0;
+fstream fp;
+player ppp;
+player p1;
+player temp;
+fp.open("gamedata.txt",ios::in|ios::out);
+while(fp.read((char*)&ppp,sizeof(ppp)))
+	{
+	pp[i].copy(ppp);
+	i++;
+	}
+fp.close();
+remove("gamedata.txt");
+no_of_players=i;
+for(j=0;j<(no_of_players);j++)
+	{
+	for(k=1;k<((no_of_players)-1);k++)
+		{
+		if(pp[k].score<=pp[k+1].score)
+			{
+			temp.copy(pp[k]);
+			pp[k].copy(pp[k+1]);
+			pp[k+1].copy(temp);
+			}
+		}
+	}
+if(no_of_players==19)
+	no_of_players-=1;
+int f=0;
+fp.open("gamedata.txt",ios::in|ios::out);
+while(f<no_of_players)
+	{
+	p1=pp[f];
+	fp.write((char*)&p1,sizeof(p1));
+	f=f+1;
+	}
+fp.close();
+}
+
+//function for adding the current player into the data file and restrict data stored of players to 20
+void add()
+{
+fstream fp;
+fp.open("gamedata.txt",ios::in|ios::out|ios::app);
+fp.write((char*)&p,sizeof(p));
+fp.close();
+}
+
+//welcome screen
+void menu()
+{
+randomize();
+char ch;
+int i;
+setbkcolor(11);
+for(i=0;i<150;i++)
+	{
+	int x1,x2,y1,y2;
+	x1=random(800);
+	x2=random(800);
+	y1=random(600);
+	y2=random(600);
+	rectangle(x1,y1,x2,y2);
+	}
+settextstyle(TRIPLEX_FONT,0,6);
+setcolor(1);
+delay(500);
+outtextxy(181,145,"Welcome To");
+delay(1200);
+outtextxy(205,185,"Chungus");
+delay(800);
+outtextxy(204,225,"Breakout");
+settextstyle(DEFAULT_FONT,0,2);
+setcolor(9);
+delay(1200);
+outtextxy(168,305,"Press space to start");
+ch=getch();
+if(ch==' ')
+	return;
+else
+	exit(0);
+}
+
+//loading screen
+void loadscreen()
+{
+randomize();
+cleardevice();
+setbkcolor(0);
+int i,k,l;
+int j=170;
+delay(700);
+for(l=0;l<3;l++)
+	{
+	settextstyle(GOTHIC_FONT,0,7);
+	setcolor(15);
+	rectangle(125,135,480,275);
+	rectangle(120,140,475,280);
+	rectangle(115,145,470,285);
+	outtextxy(148,160,"LOADING");
+	for(i=0;i<6;i++)
+		{
+		setcolor(15);
+		k=random(6);
+		delay(k*50);
+		outtextxy(j,185,".");
+		j=j+50;
+		}
+	j=j-300;
+	for(i=0;i<6;i++)
+		{
+		if(l!=2)
+			{
+			setcolor(0);
+			outtextxy(j,185,".");
+			j=j+50;
+			}
+		}
+	j=j-300;
+	}
+delay(1000);
+return;
+}
+
+//input screen which inputs user's name and age
+void userinput()
+{
+char name[11],ch;
+char age[4];
+int i=0;
+name[0]='\0';
+age[0]='\0';
+do
+	{
+	clearviewport();
+	setbkcolor(0);
+	setcolor(5);
+	settextstyle(DEFAULT_FONT,0,3);
+	outtextxy(50,150,"Enter Name (10 char) - ");
+	setcolor(15);
+	outtextxy(50,180,name);
+	ch=getch();
+	if(ch!=8 && ch!=13 && i<10 ) // 8 is backspace key and 13 is enter key
+		{
+		name[i]=ch;
+		name[i+1]='\0';
+		i++;
+		}
+	else
+	if(ch==8 && i>0) // 8 is backspace key
+		{
+		name[i-1]='\0';
+		i--;
+		}
+	}while(ch!=13);
+i=0;
+strcpy(p.retpname(),name);
+do
+	{
+	clearviewport();
+	setbkcolor(0);
+	setcolor(5);
+	settextstyle(DEFAULT_FONT,0,3);
+	outtextxy(50,150,"Enter Name (10 char) - ");
+	setcolor(15);
+	outtextxy(50,180,name);
+	setcolor(5);
+	outtextxy(50,210,"Enter Age (3 char) - ");
+	setcolor(15);
+	outtextxy(50,240,age);
+	ch=getch();
+	if(ch!=8 && ch!=13 && i<3) // 8 is backspace key and 13 is enter key
+		{
+		age[i]=ch;
+		age[i+1]='\0';
+		i++;
+		}
+	else
+	if(ch==8 && i>0) // 8 is backspace key
+		{
+		age[i-1]='\0';
+		i--;
+		}
+	}while(ch!=13);
+strcpy(p.retpage(),age);
+}
+
+//prints the graphic portion of the game
+void menugame()
+{
+setcolor(15);
+rectangle(5,5,getmaxx()-5,getmaxy()-5);
+rectangle(8,8,getmaxx()-8,getmaxy()-8);
+rectangle(450,5,getmaxx()-5,getmaxy()-5);
+rectangle(453,8,getmaxx()-8,getmaxy()-8);
+rectangle(450,5,getmaxx()-5,43);
+rectangle(453,8,getmaxx()-8,40);
+settextstyle(DEFAULT_FONT,0,1);
+outtextxy(476,20,"CHUNGUS  BREAKOUT");
+settextstyle(DEFAULT_FONT,0,2);
+setcolor(9);
+line(462,55,620,55);
+outtextxy(495,65,"SCORES ");
+line(462,90,620,90);
+rectangle(460,140,getmaxx()-15,105);
+settextstyle(DEFAULT_FONT,0,2);
+setcolor(13);
+line(462,155,620,155);
+outtextxy(454,165,"INSTRUCTION");
+line(462,187,620,187);
+settextstyle(DEFAULT_FONT,0,1);
+setcolor(12);
+outtextxy(472,200,"Use Space to shoot");
+line(500,220,580,220);
+setcolor(3);
+outtextxy(455,235,"Use Arrow Keys to move");
+line(500,255,580,255);
+setcolor(14);
+outtextxy(482,270,"Press X to exit");
+line(500,290,580,290);
+setcolor(10);
+rectangle(460,310,getmaxx()-15,460);
+rectangle(460,310,getmaxx()-15,340);
+rectangle(460,340,getmaxx()-15,360);
+rectangle(460,360,getmaxx()-15,380);
+rectangle(460,380,getmaxx()-15,400);
+rectangle(460,400,getmaxx()-15,420);
+rectangle(460,420,getmaxx()-15,440);
+rectangle(460,420,getmaxx()-15,460);
+settextstyle(DEFAULT_FONT,0,2);
+outtextxy(465,318,"SCOREBOARD");
+rectangle(460,340,540,460);
+rectangle(460,340,570,460);
+settextstyle(DEFAULT_FONT,0,1);
+outtextxy(485,347,"NAME");
+outtextxy(545,347,"AGE");
+outtextxy(578,347,"SCORE");
+setcolor(7);
+sort();
+int k=0;
+player temp;
+fstream fp;
+fp.open("gamedata.txt",ios::in|ios::out);
+while(fp.read((char*)&temp,sizeof(temp))&& k<5)
+	{
+	outtextxy(465,347+(20*(k+1)),temp.retpname());
+	outtextxy(545,347+(20*(k+1)),temp.retpage());
+	inttostr(temp.score);
+	outtextxy(575,347+(20*(k+1)),score);
+	strcpy(score,"000000");
+	k++;
+	}
+fp.close();
+setcolor(5);
+}
+
+//creates and prints blocks
+void blocks()
+{
+if((speed%70)==0)
+{
+int z;
+for(z=0;z<20;z++)
+		{
+		if(old_r>=60)
+			old_r=15;
+		if(rec_y[z]==430)
+			{
+			setcolor(15);
+			settextstyle(DEFAULT_FONT,0,3);
+			outtextxy(160,180,"Game");
+			outtextxy(210,230,"Over");
+			p.score=sc;
+			add();
+			delay(1500);
+			exit(0);
+			}
+		if(rec_y[z]==15)
+			{
+			if(old_r>=60 || old_r==15)
+				old_r=15;
+			else
+				continue;
+			rec_x[z]=random(370);
+			color[z]=random(15);
+			setcolor(color[z]+1);
+			}
+		if(rec_y[z]!=15)
+			{
+			setcolor(0);
+			setfillstyle(0,color[z]+1);
+			rectangle(rec_x[z]+20,rec_y[z]-1,rec_x[z]+70,rec_y[z]+19);
+			floodfill(rec_x[z]+20,rec_y[z],0);
+			floodfill(rec_x[z]+69,rec_y[z]+18,0);
+			}
+		setcolor(color[z]+1);
+		setfillstyle(1,color[z]+1);
+		rectangle(rec_x[z]+20,rec_y[z],rec_x[z]+70,rec_y[z]+20);
+		floodfill(rec_x[z]+21,rec_y[z]+1,color[z]+1);
+		floodfill(rec_x[z]+69,rec_y[z]+19,color[z]+1);
+		if(old_r==rec_y[z])
+			old_r+=1;
+		rec_y[z]+=1;
+		}
+int f=random(3);
+if(f%2==0)
+	if(old_r==new_r)
+		old_r=15;
+}
+speed++;
+}
+
+//handles the movement of slider, shooting the lasers and printing the score
+void game()
+{
+clearviewport();
+setbkcolor(0);
+menugame();
+int x1=200;
+int x2=250;
+int y1=430;
+int y2=450;
+char ch;
+char user_input;
+setcolor(6);
+outtextxy(150,220,"Press any key to start");
+ch=getch();
+setcolor(0);
+outtextxy(150,220,"Press any key to start");
+while(1)
+	{
+	setfillstyle(2,11);
+	bar(x1,y1,x2,y2);
+	setcolor(15);
+	blocks();
+	if(kbhit())
+		 {
+		 user_input=getch();
+		 if(user_input==77 && x2<=440)
+		 //77 is right arrow key
+		 {
+		 x1+=8;
+		 x2+=8;
+		 setfillstyle(0,2);
+		 bar(x1-8,y1,x2-8,y2);
+		 }
+		 else
+			if(user_input==75 && x1>=20)
+			//75 is left arrow key
+			{
+			x1=x1-8;
+			x2=x2-8;
+			setfillstyle(0,2);
+			bar(x1+8,y1,x2+8,y2);
+			}
+			else
+				if(user_input==' ')
+				{
+				int i=y1;
+				for(i;i>35;i=i-5)
+					{
+					setcolor(14);
+					setfillstyle(1,14);
+					//shooter
+					circle((x1+25),i,2);
+					floodfill((x1+25),i,14);
+					delay(5);
+					for(int j=0;j<20;j++)
+						{
+						if((i+2)<=(rec_y[j]+20) && (i+2)>=rec_y[j] && (x1+25)>=(rec_x[j]+20) && (x1+25)<=(rec_x[j]+70))
+						{
+						setcolor(0);
+						setfillstyle(0,14);
+						rectangle(rec_x[j]+20,rec_y[j],rec_x[j]+70,rec_y[j]+20);
+						floodfill(rec_x[j]+21,rec_y[j]+1,0);
+						setcolor(0);
+						line(rec_x[j]+20,rec_y[j]-1,rec_x[j]+70,rec_y[j]-1);
+						setfillstyle(0,14);
+						//shooter
+						circle((x1+25),i,2);
+						floodfill(x1+25,i,0);
+						new_r=rec_y[j];
+						rec_y[j]=15;
+						setcolor(15);
+						if(sc>0)
+							{
+							settextstyle(DEFAULT_FONT,0,3);
+							sc-=100;
+							setcolor(0);
+							outtextxy(472,112,score);
+							sc+=100;
+							}
+						sc+=100;
+						inttostr(sc);
+						settextstyle(DEFAULT_FONT,0,3);
+						int c=random(14);
+						setcolor(c+1);
+						outtextxy(472,112,score);
+						goto end;
+						}
+						}
+					setcolor(0);
+					setfillstyle(0,14);
+					//shooter
+					circle((x1+25),i,2);
+					floodfill(x1+25,i,0);
+					}
+				end:
+				}
+			else
+				if(user_input=='x')
+				{
+				setcolor(15);
+				settextstyle(DEFAULT_FONT,0,3);
+				outtextxy(80,180,"Thank You");
+				outtextxy(130,230,"For Playing");
+				p.score=sc;
+				add();
+				delay(1500);
+				exit(0);
+				}
+		}
+}
+}
+
+void main()
+{
+clrscr();
+int gd=DETECT,gm=DETECT;
+initgraph(&gd,&gm,"..\\BGI");
+menu();
+userinput();
+loadscreen();
+game();
+getch();
+clearviewport();
+closegraph();
+}
